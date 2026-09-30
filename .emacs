@@ -29,10 +29,10 @@
 (setq-default tab-width 4)
 (setq-default c-basic-offset 4)
 
-										; themes
-(set-face-attribute 'default nil
-                    :background "black"
-                    :foreground "white")
+; themes
+;(set-face-attribute 'default nil
+;                    :background "black"
+;                    :foreground "white")
 
 
 ; toolbar and display config
@@ -43,5 +43,40 @@
 
 (load-file custom-file)
 
-										; emacs binds
+; emacs binds
 (global-set-key (kbd "M-!") #'compile)
+
+;; templates
+(defvar my-java-template-directory
+  (expand-file-name "templates/" user-emacs-directory))
+(defun my-create-java-dsa-file (file-name)
+  "Create java file from DSA template"
+  (interactive "FJava file name: ")
+
+  (unless (string-suffix-p ".java" file-name)
+	(setq file-name (concat file-name ".java")))
+
+  (let* ((template-file
+		  (expand-file-name
+		   "JavaDSATemplate.java"
+		   my-java-template-directory))
+		 (class-name
+		  (file-name-sans-extension
+		   (file-name-nondirectory file-name))))
+
+	;; Check that the template exists before creating the java file
+	(unless (file-exists-p template-file)
+	  (user-error "Tempalte not found: %s" template-file))
+
+  (find-file file-name)
+
+  (when (= (buffer-size) 0)
+	(insert-file-contents template-file)
+	(goto-char (point-min))
+
+	(while (search-forward "{{CLASS_NAME}}" nil t)
+	  (replace-match class-name t t)))
+
+	(save-buffer)))
+
+(global-set-key (kbd "C-c j d") #'my-create-java-dsa-file)
